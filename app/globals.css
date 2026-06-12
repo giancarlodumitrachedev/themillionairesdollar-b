@@ -1,0 +1,262 @@
+@import "tailwindcss";
+
+/*
+  Design system — "editorial brutalism".
+  Exactly the palette from the PRD. No gradients, no shadows, no other colors.
+*/
+
+@theme {
+  --color-*: initial;
+
+  --color-bg: #0a0a0a;
+  --color-bg-elevated: #141414;
+  --color-bg-overlay: #1c1c1c;
+  --color-primary: #f5f3ee;
+  --color-secondary: #a8a59e;
+  --color-tertiary: #6b6862;
+  --color-accent: #8b7355;
+  --color-accent-bright: #c9a876;
+  --color-edge: #2a2a2a;
+  --color-edge-strong: #3a3a3a;
+  --color-danger: #8b3a3a;
+  --color-success: #4a6b4a;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+}
+
+@theme inline {
+  --font-display: var(--font-display-src), "Cormorant Garamond", Georgia, serif;
+  --font-body: var(--font-body-src), Inter, system-ui, sans-serif;
+  --font-mono: var(--font-mono-src), "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root {
+  /* Raw tokens, mirrored from the PRD for non-Tailwind consumers */
+  --color-bg: #0a0a0a;
+  --color-bg-elevated: #141414;
+  --color-bg-overlay: #1c1c1c;
+  --color-text-primary: #f5f3ee;
+  --color-text-secondary: #a8a59e;
+  --color-text-tertiary: #6b6862;
+  --color-accent: #8b7355;
+  --color-accent-bright: #c9a876;
+  --color-border: #2a2a2a;
+  --color-border-strong: #3a3a3a;
+  --color-danger: #8b3a3a;
+  --color-success: #4a6b4a;
+
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-bg);
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+/* Visible focus for keyboard users — WCAG AA */
+:focus-visible {
+  outline: 2px solid var(--color-accent-bright);
+  outline-offset: 2px;
+}
+
+/* Inline links: thin underline, accent on hover. No bold, no drastic shift. */
+.link-inline {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 300ms;
+}
+.link-inline:hover {
+  color: var(--color-accent-bright);
+}
+
+/* Uppercase mono eyebrow labels */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+/* Shared page container */
+.container-site {
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 2rem;
+}
+@media (max-width: 640px) {
+  .container-site {
+    padding-inline: 1.25rem;
+  }
+}
+
+/* Scroll indicator: 1px vertical line that pulses */
+@keyframes pulse-line {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.scroll-indicator-line {
+  width: 1px;
+  height: 60px;
+  background: var(--color-text-tertiary);
+  animation: pulse-line 2000ms ease-in-out infinite;
+}
+
+/* Loading: thin sweeping line instead of spinners */
+@keyframes sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+.loading-line {
+  position: relative;
+  height: 1px;
+  width: 100%;
+  overflow: hidden;
+  background: var(--color-border);
+}
+.loading-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-accent);
+  animation: sweep 1200ms ease-in-out infinite;
+}
+
+/* Skeleton shimmer for tiles */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-elevated) 25%,
+    var(--color-bg-overlay) 50%,
+    var(--color-bg-elevated) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1500ms linear infinite;
+}
+
+/* Skip link — visible only on focus */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100%;
+  z-index: 100;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Permanent tier tile: the only sanctioned "gradient" — barely-there gold */
+.tile-permanent {
+  background: linear-gradient(160deg, #141414 0%, #1a1814 100%);
+}
+
+/* Manifesto drop cap */
+.dropcap::first-letter {
+  font-family: var(--font-display);
+  font-weight: 400;
+  float: left;
+  font-size: 4.4em;
+  line-height: 0.8;
+  padding-right: 0.08em;
+  padding-top: 0.04em;
+  color: var(--color-text-primary);
+}
+
+/* Mapbox chrome adjustments */
+.mapboxgl-ctrl-logo {
+  opacity: 0.35;
+}
+.mapboxgl-ctrl-attrib {
+  background: rgba(10, 10, 10, 0.7) !important;
+  font-family: var(--font-mono);
+  font-size: 9px !important;
+}
+.mapboxgl-ctrl-attrib a {
+  color: var(--color-text-tertiary) !important;
+}
+.mapboxgl-popup-content {
+  background: var(--color-bg-elevated) !important;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 2px !important;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 12px 14px !important;
+  box-shadow: none !important;
+}
+.mapboxgl-popup-tip {
+  border-top-color: var(--color-border-strong) !important;
+  border-bottom-color: var(--color-border-strong) !important;
+}
+.mapboxgl-popup-close-button {
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+  right: 4px;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Reduced motion — PRD §10.2 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
