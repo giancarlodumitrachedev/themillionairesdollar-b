@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 import { countryName } from "@/lib/countries";
 import { formatTileNumber } from "@/lib/utils";
-import mapStyle from "@/lib/mapbox/style.dark.json";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 interface MapPointProps {
@@ -56,12 +55,35 @@ export function WorldMap({ dict, variant }: MapPointProps) {
 
       map = new mapboxgl.Map({
         container: containerRef.current,
-        style: mapStyle as unknown as import("mapbox-gl").StyleSpecification,
+        // Standard dark style: guaranteed to render with any valid token.
+        // Recolored to the M.D. palette and stripped of roads/POIs on load
+        // (see "style.load" below). The hand-built minimal style is kept in
+        // lib/mapbox/style.dark.json for reference.
+        style: "mapbox://styles/mapbox/dark-v11",
         center: [8, 30],
-        zoom: 1.2,
+        zoom: 1.4,
         minZoom: 1,
         maxZoom: 10,
         cooperativeGestures: variant === "preview",
+      });
+
+      // Apply the editorial palette over the standard style: water #0a0a0a,
+      // land #1a1a1a, hide roads/POIs/transit, dim labels.
+      map.on("style.load", () => {
+        if (!map) return;
+        map.setPaintProperty("background", "background-color", "#1a1a1a");
+        for (const layer of map.getStyle().layers ?? []) {
+          const id = layer.id;
+          if (layer.type === "fill" && /water|ocean|sea/i.test(id)) {
+            map.setPaintProperty(id, "fill-color", "#0a0a0a");
+          }
+          if (layer.type === "background") {
+            map.setPaintProperty(id, "background-color", "#1a1a1a");
+          }
+          if (/road|bridge|tunnel|poi|transit|building|aeroway|ferry/i.test(id)) {
+            map.setLayoutProperty(id, "visibility", "none");
+          }
+        }
       });
 
       // Self-diagnosis: failed styles/tiles/glyphs would otherwise render as
@@ -128,9 +150,11 @@ export function WorldMap({ dict, variant }: MapPointProps) {
           source: "declarations",
           filter: ["!", ["has", "point_count"]],
           paint: {
-            "circle-color": "#8b7355",
-            "circle-radius": ["interpolate", ["linear"], ["zoom"], 1, 3, 8, 5],
-            "circle-opacity": 0.9,
+            "circle-color": "#c9a876",
+            "circle-radius": ["interpolate", ["linear"], ["zoom"], 1, 5, 8, 7],
+            "circle-stroke-color": "#8b7355",
+            "circle-stroke-width": 1,
+            "circle-opacity": 1,
           },
         });
         map.addLayer({
@@ -221,8 +245,8 @@ export function WorldMap({ dict, variant }: MapPointProps) {
     <div
       className={
         variant === "full"
-          ? "relative h-full min-h-[320px] w-full"
-          : "relative aspect-[4/3] min-h-[320px] w-full border border-edge sm:aspect-video"
+          ? "relative h-full min-h-[400px] w-full"
+          : "relative h-[480px] w-full border border-edge sm:h-[600px]"
       }
     >
       {/* Land-colored failsafe: if the style can't load, this shows instead of a void. */}
