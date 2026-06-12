@@ -39,6 +39,7 @@ export function WorldMap({ dict, variant }: MapPointProps) {
 
     let map: import("mapbox-gl").Map | null = null;
     let cancelled = false;
+    let resizeObserver: ResizeObserver | null = null;
 
     (async () => {
       const [{ default: mapboxgl }, dataRes] = await Promise.all([
@@ -74,11 +75,16 @@ export function WorldMap({ dict, variant }: MapPointProps) {
       map.on("load", () => {
         if (!map) return;
 
-        // Insurance against a zero-size measurement at construction time
-        // (the symptom: style + glyphs load, but no vector tiles are ever
-        // requested and the canvas is effectively invisible).
+        // The aspect-ratio container settles its height AFTER the map is
+        // constructed, so the initial measurement is a thin strip (e.g.
+        // 1092x269) and the world is squashed off-screen. A ResizeObserver
+        // re-syncs the GL viewport to the container on every layout change —
+        // the canonical fix for a blank/clipped Mapbox canvas.
         map.resize();
-        setTimeout(() => map?.resize(), 500);
+        if (containerRef.current) {
+          resizeObserver = new ResizeObserver(() => map?.resize());
+          resizeObserver.observe(containerRef.current);
+        }
 
         const canvas = map.getCanvas();
         console.info(
@@ -206,6 +212,7 @@ export function WorldMap({ dict, variant }: MapPointProps) {
 
     return () => {
       cancelled = true;
+      resizeObserver?.disconnect();
       map?.remove();
     };
   }, [variant]);
