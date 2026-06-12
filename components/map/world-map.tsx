@@ -73,6 +73,28 @@ export function WorldMap({ dict, variant }: MapPointProps) {
 
       map.on("load", () => {
         if (!map) return;
+
+        // Insurance against a zero-size measurement at construction time
+        // (the symptom: style + glyphs load, but no vector tiles are ever
+        // requested and the canvas is effectively invisible).
+        map.resize();
+        setTimeout(() => map?.resize(), 500);
+
+        const canvas = map.getCanvas();
+        console.info(
+          `[M.D. map] loaded — canvas ${canvas.width}x${canvas.height}, zoom ${map
+            .getZoom()
+            .toFixed(2)}`
+        );
+        map.once("idle", () => {
+          if (!map) return;
+          console.info(
+            `[M.D. map] idle — tiles loaded: ${map.areTilesLoaded()}, canvas ${
+              map.getCanvas().width
+            }x${map.getCanvas().height}`
+          );
+        });
+
         map.addSource("declarations", {
           type: "geojson",
           data: dataRes,
@@ -192,8 +214,8 @@ export function WorldMap({ dict, variant }: MapPointProps) {
     <div
       className={
         variant === "full"
-          ? "relative h-full w-full"
-          : "relative aspect-[4/3] w-full border border-edge sm:aspect-video"
+          ? "relative h-full min-h-[320px] w-full"
+          : "relative aspect-[4/3] min-h-[320px] w-full border border-edge sm:aspect-video"
       }
     >
       {/* Land-colored failsafe: if the style can't load, this shows instead of a void. */}
