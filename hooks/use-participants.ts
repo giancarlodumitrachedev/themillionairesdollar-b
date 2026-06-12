@@ -45,6 +45,10 @@ export function useParticipants(filters: WallFilters, initial: PublicTile[] = []
   const requestSeq = useRef(0);
 
   const fetchPage = useCallback(async (f: WallFilters, page: number): Promise<PublicTile[]> => {
+    // Misconfigured environment (missing NEXT_PUBLIC_SUPABASE_*) → empty wall, no crash.
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return [];
+    }
     const supabase = createClient();
     let query = supabase.from("public_tiles").select("*");
 
