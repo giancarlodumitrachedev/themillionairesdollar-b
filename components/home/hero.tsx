@@ -44,13 +44,13 @@ export function Hero({ initialCount, dict, locale }: { initialCount: number; dic
       <div className="flex flex-col items-center text-center">
         <p
           aria-live="polite"
-          className={`font-display text-[6rem] font-light leading-[0.95] tracking-[-0.03em] transition-colors duration-300 sm:text-[8rem] lg:text-[12rem] ${
+          className={`font-display text-[6rem] font-light leading-[0.95] tracking-[-0.03em] lining-nums transition-colors duration-300 sm:text-[8rem] lg:text-[12rem] ${
             flash ? "text-accent-bright" : "text-primary"
           }`}
         >
           {formatCount(displayed, locale)}
         </p>
-        <p className="mt-4 font-body text-xs font-medium uppercase tracking-[0.2em] text-secondary sm:text-sm">
+        <p className="mt-6 font-body text-xs font-medium uppercase tracking-[0.2em] text-secondary sm:text-sm">
           {dict.hero.label}
         </p>
 

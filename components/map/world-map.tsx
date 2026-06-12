@@ -28,6 +28,7 @@ export function WorldMap({ dict, variant }: MapPointProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [count, setCount] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -62,6 +63,14 @@ export function WorldMap({ dict, variant }: MapPointProps) {
         cooperativeGestures: variant === "preview",
       });
 
+      // Self-diagnosis: failed styles/tiles/glyphs would otherwise render as
+      // a silent black rectangle. Surface the first error on screen + console.
+      map.on("error", (e) => {
+        const message = e.error?.message ?? "unknown map error";
+        console.error("[M.D. map]", message);
+        setMapError((prev) => prev ?? message);
+      });
+
       map.on("load", () => {
         if (!map) return;
         map.addSource("declarations", {
@@ -80,8 +89,8 @@ export function WorldMap({ dict, variant }: MapPointProps) {
           filter: ["!", ["has", "point_count"]],
           paint: {
             "circle-color": "#8b7355",
-            "circle-radius": 8,
-            "circle-opacity": 0.25,
+            "circle-radius": 10,
+            "circle-opacity": 0.35,
             "circle-blur": 1,
           },
         });
@@ -102,9 +111,9 @@ export function WorldMap({ dict, variant }: MapPointProps) {
           source: "declarations",
           filter: ["has", "point_count"],
           paint: {
-            "circle-color": "#141414",
+            "circle-color": "#1c1c1c",
             "circle-stroke-color": "#8b7355",
-            "circle-stroke-width": 1,
+            "circle-stroke-width": 1.5,
             "circle-radius": ["step", ["get", "point_count"], 14, 50, 20, 500, 28],
           },
         });
@@ -187,7 +196,13 @@ export function WorldMap({ dict, variant }: MapPointProps) {
           : "relative aspect-[4/3] w-full border border-edge sm:aspect-video"
       }
     >
-      <div ref={containerRef} className="absolute inset-0" aria-label="World map of declarations" role="img" />
+      {/* Land-colored failsafe: if the style can't load, this shows instead of a void. */}
+      <div
+        ref={containerRef}
+        className="absolute inset-0 bg-[#1a1a1a]"
+        aria-label="World map of declarations"
+        role="img"
+      />
       {failed && (
         <div className="absolute inset-0 flex items-center justify-center bg-bg-elevated">
           <p className="px-8 text-center font-mono text-xs uppercase tracking-[0.2em] text-tertiary">
@@ -195,7 +210,12 @@ export function WorldMap({ dict, variant }: MapPointProps) {
           </p>
         </div>
       )}
-      {count !== null && (
+      {mapError && (
+        <p className="absolute left-3 top-3 max-w-[80%] truncate bg-bg/80 px-3 py-1.5 font-mono text-[10px] text-danger">
+          map error: {mapError}
+        </p>
+      )}
+      {variant === "preview" && count !== null && (
         <p className="absolute right-3 top-3 bg-bg/70 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.15em] text-secondary">
           {count.toLocaleString()} {dict.map.declarations}
         </p>
