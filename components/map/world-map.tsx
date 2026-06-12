@@ -68,20 +68,35 @@ export function WorldMap({ dict, variant }: MapPointProps) {
       });
 
       // Apply the editorial palette over the standard style: water #0a0a0a,
-      // land #1a1a1a, hide roads/POIs/transit, dim labels.
+      // flat land #1a1a1a, thin country borders, country labels only (z3+).
+      // Layer ids vary between style versions, so match by type/pattern and
+      // never reference a hardcoded id (the previous "background" id did not
+      // exist in dark-v11 and raised a style error).
       map.on("style.load", () => {
         if (!map) return;
-        map.setPaintProperty("background", "background-color", "#1a1a1a");
-        for (const layer of map.getStyle().layers ?? []) {
+        for (const layer of map.getStyle()?.layers ?? []) {
           const id = layer.id;
-          if (layer.type === "fill" && /water|ocean|sea/i.test(id)) {
-            map.setPaintProperty(id, "fill-color", "#0a0a0a");
-          }
-          if (layer.type === "background") {
-            map.setPaintProperty(id, "background-color", "#1a1a1a");
-          }
-          if (/road|bridge|tunnel|poi|transit|building|aeroway|ferry/i.test(id)) {
-            map.setLayoutProperty(id, "visibility", "none");
+          try {
+            if (layer.type === "background") {
+              map.setPaintProperty(id, "background-color", "#1a1a1a");
+            } else if (layer.type === "fill" && /water|ocean|sea/i.test(id)) {
+              map.setPaintProperty(id, "fill-color", "#0a0a0a");
+            } else if (id === "country-label") {
+              map.setPaintProperty(id, "text-color", "#6b6862");
+              map.setPaintProperty(id, "text-halo-color", "#0a0a0a");
+              map.setLayerZoomRange(id, 3, 24);
+            } else if (layer.type === "symbol") {
+              // No cities, no road names, no POIs — only countries remain.
+              map.setLayoutProperty(id, "visibility", "none");
+            } else if (layer.type === "line" && /^admin-0-boundary$/.test(id)) {
+              map.setPaintProperty(id, "line-color", "#2a2a2a");
+              map.setPaintProperty(id, "line-width", 0.5);
+            } else if (layer.type === "fill" || layer.type === "line" || layer.type === "hillshade" || layer.type === "fill-extrusion") {
+              // Landuse, parks, roads, admin-1, waterways, terrain: flat dark.
+              map.setLayoutProperty(id, "visibility", "none");
+            }
+          } catch {
+            // Never let a single cosmetic tweak break the whole map.
           }
         }
       });
